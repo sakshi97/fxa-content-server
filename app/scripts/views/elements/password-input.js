@@ -9,16 +9,24 @@ module.exports = {
   match ($el) {
     const type = $el.attr('type');
     return type === 'password' ||
-             (type === 'text' && $el.hasClass('password'));
+           (type === 'text' && $el.hasClass('password'));
   },
 
   validate () {
     const value = this.val();
 
-    if (! value) {
-      throw AuthErrors.toError('PASSWORD_REQUIRED');
-    } else if (Vat.password().validate(value).error) {
-      throw AuthErrors.toError('PASSWORD_TOO_SHORT');
+      if (! this.attr('delegateValidation')) {
+        console.log('going here too', this.attr('id'));
+        if (! value) {
+          throw AuthErrors.toError('PASSWORD_REQUIRED');
+        } else if (Vat.password().validate(value).error) {
+          throw AuthErrors.toError('PASSWORD_TOO_SHORT');
+        }
+      } else {
+        console.log('validate event', this.attr('id'));
+
+        this.trigger('validate');
+      }
     }
   }
 };

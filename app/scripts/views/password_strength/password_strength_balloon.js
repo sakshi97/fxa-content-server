@@ -48,13 +48,13 @@ class PasswordStrengthBalloonView extends BaseView {
     });
   }
 
-  afterRender () {
+  /*  afterRender () {
     // Show the balloon if the model is already invalid.
     if (this.model.validate()) {
       this.show();
     }
   }
-
+*/
   hideIfValid () {
     if (this.model.get('isValid')) {
       this.clearTimeouts();

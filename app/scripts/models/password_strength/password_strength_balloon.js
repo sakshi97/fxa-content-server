@@ -37,9 +37,12 @@ const BANNED_URL_REGEXP = /^(?:firefox|mozilla)\.(?:com|org)$/;
 export default class PasswordStrengthBalloonModel extends Model {
   constructor (attrs = {}, config = {}) {
     const attrsWithDefaults = assign({
+      error: undefined,
       hasCheckedPassword: false,
       hasEnteredPassword: false,
+      hasFocused: false,
       hasSubmit: false,
+      hasValidated: false,
       isCommon: false,
       isSameAsEmail: false,
       isSubmitting: false,
@@ -137,14 +140,24 @@ export default class PasswordStrengthBalloonModel extends Model {
   }
 
   validate () {
+    let err;
+
     if (! this.get('password')) {
-      return AuthErrors.toError('PASSWORD_REQUIRED');
+      err = AuthErrors.toError('PASSWORD_REQUIRED');
     } else if (this.get('isTooShort')) {
-      return AuthErrors.toError('PASSWORD_TOO_SHORT');
+      err = AuthErrors.toError('PASSWORD_TOO_SHORT');
     } else if (this.get('isSameAsEmail')) {
-      return AuthErrors.toError('PASSWORD_SAME_AS_EMAIL');
+      err = AuthErrors.toError('PASSWORD_SAME_AS_EMAIL');
     } else if (this.get('isCommon')) {
-      return AuthErrors.toError('PASSWORD_TOO_COMMON');
+      err = AuthErrors.toError('PASSWORD_TOO_COMMON');
     }
+
+    this.set('hasValidated', true);
+
+    if (err) {
+      this.set('error', err);
+    }
+
+    return err;
   }
 }

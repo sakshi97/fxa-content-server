@@ -19,17 +19,36 @@ import PasswordStrengthBalloonView from './password_strength_balloon';
 const PasswordWithStrengthBalloonView = FormView.extend({
   events: {
     change: 'updateModelForPassword',
+    focus: 'createBalloon',
     keyup: 'updateModelForPassword',
+    validate: 'validate',
   },
 
   initialize (options = {}) {
-    this.passwordHelperBalloon = options.passwordHelperBalloon || new PasswordStrengthBalloonView({
-      el: options.balloonEl,
-      lang: this.lang,
-      model: this.model,
-      translator: this.translator
-    });
-    this.trackChildView(this.passwordHelperBalloon);
+    this.passwordHelperBalloon = options.passwordHelperBalloon;
+    this.balloonEl = options.balloonEl;
+    this.parent = options.parent;
+  },
+
+  createBalloon () {
+    if (! this.passwordHelperBalloon) {
+      this.model.set('hasFocused', true);
+
+      const passwordHelperBalloon = this.passwordHelperBalloon = new PasswordStrengthBalloonView({
+        el: this.balloonEl,
+        lang: this.lang,
+        model: this.model,
+        translator: this.translator
+      });
+      this.trackChildView(passwordHelperBalloon);
+      // update our own styles whenever the balloon does to avoid any jank.
+      this.listenTo(passwordHelperBalloon, 'rendered', () => this.updateStyles());
+
+      return passwordHelperBalloon.render()
+        .then(() => {
+          this.$el.attr('aria-described-by', 'password-strength-balloon');
+        });
+    }
   },
 
   afterRender () {
@@ -40,13 +59,6 @@ const PasswordWithStrengthBalloonView = FormView.extend({
       if (this.$el.val().length) {
         return this.updateModelForPassword();
       }
-    }).then(() => {
-      // update our own styles whenever the balloon does to avoid any jank.
-      this.listenTo(this.passwordHelperBalloon, 'rendered', () => this.updateStyles());
-
-      return this.passwordHelperBalloon.render();
-    }).then(() => {
-      this.$el.attr('aria-described-by', 'password-strength-balloon');
     });
   },
 
@@ -55,13 +67,15 @@ const PasswordWithStrengthBalloonView = FormView.extend({
   },
 
   updateStyles () {
-    const { hasEnteredPassword, isValid } = this.model.toJSON();
+    const { hasEnteredPassword, hasSubmit, isValid } = this.model.toJSON();
 
-    if (hasEnteredPassword && ! isValid) {
-      const describedById = this._getDescribedById();
-      this.markElementInvalid(this.$el, describedById);
-    } else {
-      this.markElementValid(this.$el);
+    if (hasEnteredPassword || hasSubmit) {
+      if (! isValid) {
+        const describedById = this._getDescribedById();
+        this.markElementInvalid(this.$el, describedById);
+      } else {
+        this.markElementValid(this.$el);
+      }
     }
   },
 
@@ -78,6 +92,14 @@ const PasswordWithStrengthBalloonView = FormView.extend({
       return 'password-same-as-email';
     } else if (isCommon) {
       return 'password-too-common';
+    }
+  },
+
+  validate () {
+    const validationError = this.model.validate();
+    if (validationError) {
+      validationError.describedById = this._getDescribedById();
+      throw validationError;
     }
   }
 });
