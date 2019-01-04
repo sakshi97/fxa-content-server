@@ -85,7 +85,7 @@ registerSuite('TOTP', {
   },
 
   afterEach: function () {
-    return this.remote.then(clearBrowserState());
+    return this.remote.then(clearBrowserState({force: true}));
   },
   tests: {
     'can add TOTP to account and confirm web signin': function () {
@@ -245,7 +245,7 @@ registerSuite('TOTP - unverified session', {
   },
 
   afterEach: function () {
-    return this.remote.then(clearBrowserState());
+    return this.remote.then(clearBrowserState({force: true}));
   },
 
   tests: {
