@@ -224,7 +224,7 @@ registerSuite('TOTP', {
         .then(fillOutResetPassword(email))
 
         // clear all browser state, simulate opening in a new browser
-        .then(clearBrowserState())
+        .then(clearBrowserState({force: true}))
         .then(openVerificationLinkInSameTab(email, 2))
         .then(fillOutCompleteResetPassword(PASSWORD, PASSWORD))
         .then(testElementExists(selectors.TOTP_SIGNIN.HEADER))
